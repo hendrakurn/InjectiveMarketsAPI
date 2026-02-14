@@ -11,6 +11,7 @@ MarketLens transforms raw Injective blockchain data into clean, computed, and de
 Every developer building on Injective rewrites the same data aggregation logic from scratch. MarketLens eliminates that — one API, clean endpoints, computed metrics ready to use.
 Building on Injective means dealing with multiple data sources Chain gRPC, Indexer API, and Chronos API each with different formats and levels of abstraction. Getting a simple answer like *"is this market healthy enough for my trading bot?"* requires hundreds of lines of boilerplate.
 Raw Injective data tells you what happened. MarketLens tells you what it means market health, volatility, and liquidity scores in a single request. Stop parsing orderbooks, stop calculating spreads, marketLens gives you the answers, not the raw data.
+
 ` "Injective data is powerful but complex. MarketLens makes it simple." `
 
 MarketLens abstracts all of that into clean REST endpoints with computed metrics:
