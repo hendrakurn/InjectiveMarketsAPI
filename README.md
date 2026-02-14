@@ -8,7 +8,10 @@ MarketLens transforms raw Injective blockchain data into clean, computed, and de
 
 ## Why MarketLens?
 
-Building on Injective means dealing with multiple data sources — Chain gRPC, Indexer API, and Chronos API — each with different formats and levels of abstraction. Getting a simple answer like *"is this market healthy enough for my trading bot?"* requires hundreds of lines of boilerplate.
+Every developer building on Injective rewrites the same data aggregation logic from scratch. MarketLens eliminates that — one API, clean endpoints, computed metrics ready to use.
+Building on Injective means dealing with multiple data sources Chain gRPC, Indexer API, and Chronos API each with different formats and levels of abstraction. Getting a simple answer like *"is this market healthy enough for my trading bot?"* requires hundreds of lines of boilerplate.
+Raw Injective data tells you what happened. MarketLens tells you what it means market health, volatility, and liquidity scores in a single request. Stop parsing orderbooks, stop calculating spreads, marketLens gives you the answers, not the raw data.
+` "Injective data is powerful but complex. MarketLens makes it simple." `
 
 MarketLens abstracts all of that into clean REST endpoints with computed metrics:
 
@@ -261,8 +264,8 @@ curl http://localhost:3000/markets/0xa508cb.../summary
 
 ```bash
 # 1. Clone the repository
-git clone https://github.com/hendrakurn/MarketLens.git
-cd MarketLens
+git clone https://github.com/hendrakurn/InjectiveMarketAPI.git
+cd InjectiveMarketAPI
 
 # 2. Install dependencies
 npm install
@@ -293,21 +296,35 @@ curl http://localhost:3000
 
 ## Project Structure
 
-```
-MarketLens/
+InjectiveMarketAPI/
+├── node_modules/
 ├── src/
-│   ├── routes/
-│   │   └── markets.js        # All /markets/... endpoints
 │   ├── controller/
-│   │   ├── injective.js      # Injective API data fetching
-│   │   └── calculator.js     # Health score & volatility logic
+│   │   ├── calculator.js        # Health score & volatility logic
+│   │   └── injective.js         # Injective API data fetching
+│   │
 │   ├── middleware/
-│   │   └── validator.js      # Input validation
-│   └── app.js                # Express entry point
-├── .env.example
+│   │   └── validator.js         # Input validation
+│   │
+│   ├── routes/
+│   │   └── markets.js           # All /markets/... endpoints
+│   │
+│   ├── services/
+│   │   ├── ActivityScore.js     # Activity scoring logic
+│   │   ├── DepthScore.js        # Market depth scoring logic
+│   │   ├── SpreadScore.js       # Spread scoring logic
+│   │   └── StabilityScore.js    # Stability scoring logic
+│   │
+│   └── app.js                   # Express entry point
+│
+├── .env                         # Environment variables
+├── .env.example                 # Example environment config
+├── .gitignore
+├── package-lock.json
 ├── package.json
-└── README.md
-```
+├── README.md
+└── test-connection.js           # API connection testing
+
 
 ---
 
@@ -350,6 +367,50 @@ const { best_market, comparison } = await res.json()
 highlightSafest(best_market)
 ```
 
+**Protocol lending — set collateral ratio based on market health:**
+```js
+const res = await fetch('/markets/0xMarketId/health')
+const { health_score, components } = await res.json()
+
+// Tighten collateral requirement when market is unhealthy
+const collateralRatio = health_score >= 80 ? 1.5 : 2.0
+protocol.setCollateralRatio(collateralRatio)
+```
+
+**Volatility-aware slippage — adjust tolerance dynamically:**
+```js
+const res = await fetch('/markets/0xMarketId/volatility?window=1h')
+const { interpretation } = await res.json()
+
+const slippage = {
+  very_low: 0.1, low: 0.3, moderate: 0.5,
+  high: 1.0, very_high: 2.0
+}
+dex.setSlippageTolerance(slippage[interpretation])
+```
+
+**Market discovery — find the best market to trade a token:**
+```js
+// User wants to trade INJ — find which INJ market is healthiest
+const res = await fetch('/markets/top?by=health_score&limit=5')
+const { markets } = await res.json()
+const bestMarket = markets.find(m => m.ticker.includes('INJ'))
+router.sendTo(bestMarket.market_id)
+```
+
+**Alert system — notify when market degrades:**
+```js
+setInterval(async () => {
+  const res = await fetch('/markets/0xMarketId/health')
+  const { health_score, grade } = await res.json()
+
+  if (health_score < 60) {
+    alerts.send(`⚠️ Market degraded: score ${health_score} (${grade})`)
+    bot.pause()
+  }
+}, 60000) // check every minute
+```
+
 ---
 
 ## Dependencies
@@ -365,6 +426,3 @@ highlightSafest(best_market)
 
 ---
 
-## Built for Ninja API Forge Hackathon
-
-This project was built for the [Ninja API Forge](https://x.com/NinjaLabsHQ) hackathon, focused on creating developer infrastructure for the Injective ecosystem.
