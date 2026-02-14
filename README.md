@@ -296,6 +296,7 @@ curl http://localhost:3000
 
 ## Project Structure
 
+```
 InjectiveMarketAPI/
 ├── node_modules/
 ├── src/
@@ -324,7 +325,7 @@ InjectiveMarketAPI/
 ├── package.json
 ├── README.md
 └── test-connection.js           # API connection testing
-
+```
 
 ---
 
