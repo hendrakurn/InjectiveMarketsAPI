@@ -37,5 +37,5 @@ app.use((err, req, res, next) => {
 })
 
 app.listen(PORT, () => {
-  console.log(`🚀 Server running at http://localhost:${PORT}`)
+  console.log(`Server running at http://localhost:3000`)
 })
